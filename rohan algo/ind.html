@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hacker Seating Arrangement System</title>
+  <style>
+    body {
+      background-color: #0f0f0f;
+      font-family: 'Courier New', Courier, monospace;
+      color: #00ff00;
+      padding: 30px;
+    }
+
+    h2 {
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input {
+      background-color: #000;
+      border: 1px solid #00ff00;
+      color: #00ff00;
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+    }
+
+    button {
+      background-color: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #00ff00;
+      color: black;
+    }
+
+    .seating-section {
+      margin-top: 40px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #00ff00;
+      text-shadow: 0 0 3px #00ff00;
+    }
+
+    .seating-chart {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .desk {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: red;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 0 5px red;
+    }
+
+    .green {
+      background-color: #00ff00;
+      box-shadow: 0 0 10px #00ff00;
+      color: black;
+    }
+
+    .warning {
+      color: #ff0033;
+      font-weight: bold;
+      text-shadow: 0 0 5px red;
+      margin-top: 20px;
+    }
+
+    footer {
+      margin-top: 60px;
+      border-top: 1px solid #00ff00;
+      padding-top: 20px;
+      font-size: 14px;
+      text-align: center;
+      color: #00ff00;
+    }
+
+    footer a {
+      color: #00ffff;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+      color: #00ff00;
+    }
+  </style>
+</head>
+<body>
+  <h2>👾 Hacker Seating Arrangement System</h2>
+
+  <div class="input-group">
+    <label>How many columns?</label>
+    <input type="number" id="columnCount" min="1">
+  </div>
+
+  <div class="input-group">
+    <label>How many desks in each column (comma-separated)?</label>
+    <input type="text" id="desksPerColumn" placeholder="e.g. 3,4,5">
+  </div>
+
+  <div class="input-group">
+    <label>Enter starting seat number:</label>
+    <input type="number" id="startSeat">
+  </div>
+
+  <div class="input-group">
+    <label>Enter your seat number:</label>
+    <input type="number" id="yourSeat">
+  </div>
+
+  <button onclick="generateSeating()">Generate Seating</button>
+
+  <div id="warningMessage" class="warning"></div>
+  <div class="seating-section" id="chart"></div>
+
+  <footer>
+    <p>Developed by <strong>Rohan Sakhare</strong> &mdash; All rights reserved © 2025</p>
+    <p><a href="https://rohsak5649.github.io/rohansakharevirtualhouse/" target="_blank">Visit My Hacker Portfolio 🚀</a></p>
+  </footer>
+
+  <script>
+    function generateSeating() {
+      const columnCount = parseInt(document.getElementById('columnCount').value);
+      const desksInput = document.getElementById('desksPerColumn').value.trim();
+      const desks = desksInput.split(',').map(x => parseInt(x.trim()));
+      const startSeat = parseInt(document.getElementById('startSeat').value);
+      const yourSeat = parseInt(document.getElementById('yourSeat').value);
+
+      const warning = document.getElementById('warningMessage');
+      const chart = document.getElementById('chart');
+      warning.textContent = '';
+      chart.innerHTML = '';
+
+      if (!columnCount || !desksInput || !startSeat || !yourSeat) {
+        warning.textContent = '⚠️ All fields must be filled!';
+        return;
+      }
+
+      if (desks.length !== columnCount) {
+        warning.textContent = `⚠️ Number of desk entries (${desks.length}) doesn't match number of columns (${columnCount})!`;
+        return;
+      }
+
+      if (desks.some(n => isNaN(n) || n <= 0)) {
+        warning.textContent = '⚠️ All desks per column must be valid positive numbers!';
+        return;
+      }
+
+      const totalSeats = desks.reduce((a, b) => a + b, 0);
+      const maxSeat = startSeat + totalSeats - 1;
+
+      if (yourSeat < startSeat || yourSeat > maxSeat) {
+        warning.textContent = `⚠️ Your seat number (${yourSeat}) is outside the valid range (${startSeat} to ${maxSeat})!`;
+        return;
+      }
+
+      function createArrangement(reverse = false) {
+        const order = [];
+        let currentSeat = startSeat;
+        const direction = reverse
+          ? [...Array(columnCount).keys()].reverse()
+          : [...Array(columnCount).keys()];
+
+        direction.forEach((i, index) => {
+          const topToBottom = index % 2 === 0;
+          const deskCount = desks[i] || 0;
+          const thisCol = [];
+
+          if (topToBottom) {
+            for (let j = 0; j < deskCount; j++) {
+              thisCol.push({ col: i, seat: currentSeat++ });
+            }
+          } else {
+            for (let j = deskCount - 1; j >= 0; j--) {
+              thisCol.push({ col: i, seat: currentSeat++ });
+            }
+          }
+
+          order.push(...thisCol);
+        });
+
+        return order;
+      }
+
+      const arrangements = [
+        { title: 'Left to Right', data: createArrangement(false) },
+        { title: 'Right to Left', data: createArrangement(true) },
+      ];
+
+      arrangements.forEach(({ title, data }) => {
+        const section = document.createElement('div');
+        section.className = 'seating-section';
+
+        const sectionTitle = document.createElement('div');
+        sectionTitle.className = 'section-title';
+        sectionTitle.textContent = title;
+        section.appendChild(sectionTitle);
+
+        const seatingChart = document.createElement('div');
+        seatingChart.className = 'seating-chart';
+
+        const cols = Array(columnCount).fill(0).map(() => []);
+        data.forEach(seat => cols[seat.col].push(seat));
+
+        cols.forEach(col => {
+          const colDiv = document.createElement('div');
+          colDiv.className = 'column';
+          col.forEach(seat => {
+            const seatDiv = document.createElement('div');
+            seatDiv.className = 'desk ' + (seat.seat === yourSeat ? 'green' : '');
+            seatDiv.textContent = seat.seat;
+            colDiv.appendChild(seatDiv);
+          });
+          seatingChart.appendChild(colDiv);
+        });
+
+        section.appendChild(seatingChart);
+        chart.appendChild(section);
+      });
+    }
+  </script>
+</body>
+</html>
